@@ -1,4 +1,4 @@
-const configFile = "res://config/terominoes.json"
+const globalCnfgFile = "res://config/terominoes.json"
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -38,7 +38,7 @@ class Box:
 	#
 	func apply_texture(txtr_path : String):
 		if(txtr_path == ""):
-			push_warning("aBox.gd : missing texture!")
+			push_warning("no texture in Box.apply_texture(..)")
 			return
 		var image = Image.new()
 		image.load(txtr_path)
@@ -69,9 +69,11 @@ class ConfigLoader:
 
 	# load the configureration-file given as param
 	#		
-	# parameter cfgFile : path to the JSON config.-file
+	# parameter cfgFile : path to the JSON config-file
 	# 
-	func _init(cfgFile :String):
+	func _init(cfgFile:String=""):
+		if cfgFile == "":
+			cfgFile = globalCnfgFile
 		config = load_confg(cfgFile)
 
 	# loads json configuration file and returns it as dict
@@ -164,6 +166,7 @@ class ConfigLoader:
 
 
 
+
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # class Brick : it creates a brick 
@@ -171,8 +174,8 @@ class ConfigLoader:
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
 # 
-class LayerBuilder:
-	var lyrCfg = load("res://managerClasses/layer_confg.gd").LayerConfg.new("res://assets/terominoes.json")
+class Brick:
+	var lyrCfg
 	var matrix        		# 2d array with boolean values to identify positions of boxes in the brick
 	var index 				# the ID of this brick
 	var positionArray = [] 	# array of boxes 
@@ -180,6 +183,7 @@ class LayerBuilder:
 	# constructor - if id is not given a random brick will be created
 	#
 	func _init(idx:int=-1):
+		lyrCfg = ConfigLoader.new()
 		if idx < 0:
 			var rng = RandomNumberGenerator.new()
 			rng.randomize()
