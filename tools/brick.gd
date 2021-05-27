@@ -126,10 +126,10 @@ class ConfigLoader:
 		file.open(filePath, file.READ)
 		var text = file.get_as_text()
 		file.close()
-		var cfg = JSON.parse(text)
-		if cfg.error != OK:
+		var conf = JSON.parse(text)
+		if conf.error != OK:
 			return
-		return cfg.result
+		return conf.result
 
 
 	# get_num_of_bricks : get the amount of configured bricks in the conf-dict
@@ -143,11 +143,13 @@ class ConfigLoader:
 	# create_array : creates a 3D matrix for the boxes of e
 	#
 	func create_array():
-		matrix.resize[sizeX]
+		matrix.resize(sizeX)
 		for x in matrix:
-			var yA = [].resize(sizeY)
+			var yA = []
+			yA.resize(sizeY)
 			for z in yA:
-				var zA = [].resize(sizeZ)
+				var zA = []
+				zA.resize(sizeZ)
 				z = zA
 			x = yA
 
