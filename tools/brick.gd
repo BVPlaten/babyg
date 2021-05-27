@@ -1,6 +1,6 @@
 # https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html#classes
 
-const globalCnfgFile = "res://config/terominoes.json"
+
 # const globalCnfgFile = "res://config/AdvancedBricks.json"     # for 3D Tetris
 
 
@@ -16,11 +16,13 @@ class_name Brick
 
 var brickFactory
 const numberOfBricks = 7
+const sizeOfSpace = {'X': 4, 'Y': 4, 'Z': 1}
+const globalCnfgFile = "res://config/terominoes.json"
 
 # constructor - if id is not given a random brick will be created
 #
-func _init(cfgFile:String=""):
-	brickFactory = BrickFactory.new(cfgFile,4,4,1)
+func _init(cfgFile:String=globalCnfgFile):
+	brickFactory = BrickFactory.new(cfgFile,sizeOfSpace['X'],sizeOfSpace['Y'],sizeOfSpace['Z'])
 
 
 # create a brick by a given index 
@@ -33,7 +35,7 @@ func create_brick(idx:int=-1):
 		index = rng.randi()%numberOfBricks
 	else:
 		index = idx
-		brickFactory.create_brick(index)
+	brickFactory.create_brick(index)
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -153,10 +155,12 @@ class BrickFactory:
 		sizeX = sX
 		sizeY = sY
 		sizeZ = sZ
-		config = ConfigLoader.new(configurationfile)
+		config = ConfigLoader.new(configurationfile).cfg
+		create_array()
+		print(str(matrix))
 
 
-	# create_array : creates a 3D matrix for the boxes of e
+	# create_array : memory allocation for the empty 3D matrix
 	#
 	func create_array():
 		matrix.resize(sizeX)
@@ -169,39 +173,69 @@ class BrickFactory:
 				z = zA
 			x = yA
 
+	# get_point : returns true if the given point for the given brick-idx is set
+	#             the first line in the configuration is the last line in the coord-system
+	#             so there must be a coord-convesion to avoid becoming crazy
+	#
+	# parameter : idx : the index of the brick in the configuration
+	#             x   : the x-coordinate
+	#             y   : the y-coordinate
+	#             z   : the z-coordinate
+	#
+	func get_point(idx:int, x:int, y:int, z:int):
+		var data = config[String(idx)]
+		var point = data[str(x)][z][y]
+		if point == '#':
+			return true
+		else:
+			return false
+
+
 
 	# create the boolean matrix for a     brick as configuration as dictionary
 	#
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
 	func create_matrix(idx : int):
-		var mtrx = create_array()
-		var data = config[String(idx)]
-		for y in range(sizeY):
-			var line = data[String(y)]
-			for x in range(sizeX):
-				var point = line[x]
-				if (point == '#'):
-					mtrx[x][y] = true
-				else:
-					mtrx[x][y] = false
-		return mtrx
+		pass
+		# var mtrx = create_array()
+		# # in data is the data for the brick corresponding to the given index
+		# var data = config[String(idx)]
+		# for y in range(sizeY):
+		# 	var line = data[String(y)]
+		# 	for x in range(sizeX):
+		# 		var puuuup = data[String(y)]
+		# 		for z in range(sizeZ):
+		# 			var point = line[x]
+		# 			if (point == '#'):
+		# 				mtrx[x][y][z] = true
+		# 			else:
+		# 				mtrx[x][y][z] = false
+		# return mtrx
 	
+
+
 
 	# print a given matrx for debugging 
 	#
 	# parameter : mtrx is the matrix that should be printed
 	#
-	func print_matrix(mtrx):
-		var line = ""
+	func text_of_matrix(mtrx):
+		var txt = ""
 		for y in range(sizeY):
+			txt += "layer " + str(y) + " \n"
 			for x in range(sizeX):
-				if (mtrx[x][y] == true):
-					line += "X"
-				else:
-					line += "."
-			print(line)
-			line = ""
+				for z in range(sizeZ):
+					if (mtrx[x][y][z] == true):
+						txt += "X"
+					else:
+						txt += "."
+				txt += "\n"
+		return txt
+				
+
+					
+			
 	
 
 	# get an Vector3-array with the coordinates of the given brick 
