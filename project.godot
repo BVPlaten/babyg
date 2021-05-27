@@ -8,6 +8,16 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Reference",
+"class": "Brick",
+"language": "GDScript",
+"path": "res://tools/brick.gd"
+} ]
+_global_script_class_icons={
+"Brick": ""
+}
+
 [application]
 
 config/name="babyg"

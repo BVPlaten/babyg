@@ -1,9 +1,48 @@
-const globalCnfgFile = "res://config/terominoes.json"
+# https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html#classes
+
+const globalCnfgFile = "res://cfgFile/terominoes.json"
+# const globalCnfgFile = "res://cfgFile/AdvancedBricks.json"     # for 3D Tetris
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# class Box : helper to config a single box as part of a brick
+# class Brick : it creates a brick 
+#               a brick is a couple of boxes combined in a MultimeshInstance
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2021-05.22   bvp   initial realease
+# 
+class_name Brick
+
+
+var lyrCfg
+var matrix        		# 2d array with boolean values to identify positions of boxes in the brick
+var index 				# the ID of this brick
+var positionArray = [] 	# array of boxes 
+
+# constructor - if id is not given a random brick will be created
+#
+func _init(idx:int=-1):
+	lyrCfg = ConfigLoader.new()
+	if idx < 0:
+		var rng = RandomNumberGenerator.new()
+		rng.randomize()
+		index = rng.randi()%lyrCfg.get_num_of_bricks()
+	else:
+		index = idx
+	create_brick(index)
+	
+
+# create a brick by a given index 
+#
+func create_brick(idx):
+	matrix = lyrCfg.create_matrix(idx)	# read the look of the block from cfgFile
+	lyrCfg.print_matrix(matrix)
+	positionArray = lyrCfg.get_pos_list(matrix)
+
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# class Box : helper to cfgFile a single box as part of a brick
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
@@ -11,7 +50,7 @@ const globalCnfgFile = "res://config/terominoes.json"
 class Box:
 	export var mtrl : SpatialMaterial			# the look (every box has an own instnce)
 	export var texture : ImageTexture
-	export var clr : Color
+	export var colr : Color
 
 	# constructor
 	#
@@ -26,10 +65,10 @@ class Box:
 	#                       null for random color
 	func apply_color(color):
 		if(color == null):
-			clr = _random_color()
+			colr = random_color()
 		else:
-			clr = color
-		mtrl.albedo_color = clr
+			colr = color
+		mtrl.albedo_color = colr
 	
 		
 	# apply_texture : set a texture to the single box
@@ -48,7 +87,7 @@ class Box:
 
 	# _random_color : returns a random color 
 	#
-	func _random_color():
+	func random_color():
 		var rng = RandomNumberGenerator.new()
 		return Color(rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0))
 
@@ -63,22 +102,21 @@ class Box:
 # 2021-05.22   bvp   initial realease
 # 
 class ConfigLoader:
-	var config = null	# geometric info of a layer (2d matrix of booleans)
-	const sizeX = 4
-	const sizeY = 4
+	var cfgFile:String						# the path to the cfgFile file
+	var sizeX:int							# amount of boxes in this dimension
+	var sizeY:int							#   "         "             "
+	var sizeZ:int							#   "         "             "
 
 	# load the configureration-file given as param
 	#		
-	# parameter cfgFile : path to the JSON config-file
+	# parameter configurationfile : path to the JSON cfgFile-file
 	# 
-	func _init(cfgFile:String=""):
-		if cfgFile == "":
-			cfgFile = globalCnfgFile
-		config = load_confg(cfgFile)
+	func _init(configurationfile:String):
+		cfgFile = load_confg(configurationfile)
 
 	# loads json configuration file and returns it as dict
 	#
-	# parameter filePath : path to the JSON config.-file
+	# parameter filePath : path to the JSON cfgFile.-file
 	# 
 	func load_confg(filePath : String):
 		var file = File.new()
@@ -94,10 +132,10 @@ class ConfigLoader:
 	# get_num_of_bricks : get the amount of configured bricks in the conf-dict
 	#
 	func get_num_of_bricks():
-		if(config==null):
+		if(cfgFile==null):
 			return 0
 		else:
-			return config.size()
+			return cfgFile.size()
 
 
 	# create_array : create a shematic 2d-matrix which represents the  positions
@@ -112,13 +150,13 @@ class ConfigLoader:
 		return map
 
 
-	# create the boolean matrix for a brick as defined in the config-file
+	# create the boolean matrix for a brick as defined in the cfgFile-file
 	#
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
 	func create_matrix(idx : int):
 		var mtrx = create_array(sizeX,sizeX)
-		var data = config[String(idx)]
+		var data = cfgFile[String(idx)]
 		for y in range(sizeY):
 			var line = data[String(y)]
 			for x in range(sizeX):
@@ -167,37 +205,5 @@ class ConfigLoader:
 
 
 
-# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# class Brick : it creates a brick 
-#               a brick is a couple of boxes combined in a MultimeshInstance
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 2021-05.22   bvp   initial realease
-# 
-class Brick:
-	var lyrCfg
-	var matrix        		# 2d array with boolean values to identify positions of boxes in the brick
-	var index 				# the ID of this brick
-	var positionArray = [] 	# array of boxes 
-
-	# constructor - if id is not given a random brick will be created
-	#
-	func _init(idx:int=-1):
-		lyrCfg = ConfigLoader.new()
-		if idx < 0:
-			var rng = RandomNumberGenerator.new()
-			rng.randomize()
-			index = rng.randi()%lyrCfg.get_num_of_bricks()
-		else:
-			index = idx
-		create_brick(index)
-		
-
-	# create a brick by a given index 
-	#
-	func create_brick(idx):
-		matrix = lyrCfg.create_matrix(idx)	# read the look of the block from config
-		lyrCfg.print_matrix(matrix)
-		positionArray = lyrCfg.get_pos_list(matrix)
 
 
