@@ -4,10 +4,11 @@ const globalCnfgFile = "res://cfgFile/terominoes.json"
 # const globalCnfgFile = "res://cfgFile/AdvancedBricks.json"     # for 3D Tetris
 
 
+
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# class Brick : it creates a brick 
-#               a brick is a couple of boxes combined in a MultimeshInstance
+# class Brick : it creates a brick
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
 # 
@@ -22,33 +23,33 @@ var positionArray = [] 	# array of boxes
 # constructor - if id is not given a random brick will be created
 #
 func _init(idx:int=-1):
-	lyrCfg = ConfigLoader.new()
+	lyrCfg = ConfigLoader.new(globalCnfgFile,4,4,1)
 	if idx < 0:
 		var rng = RandomNumberGenerator.new()
 		rng.randomize()
 		index = rng.randi()%lyrCfg.get_num_of_bricks()
 	else:
 		index = idx
-	create_brick(index)
+	#create_brick(index) !!!!
 	
 
 # create a brick by a given index 
 #
 func create_brick(idx):
-	matrix = lyrCfg.create_matrix(idx)	# read the look of the block from cfgFile
+	matrix = lyrCfg.create_matrix(idx)	# read the     look of configuration as dictionary
 	lyrCfg.print_matrix(matrix)
 	positionArray = lyrCfg.get_pos_list(matrix)
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# class Box : helper to cfgFile a single box as part of a brick
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###                          # 3D Array as DataContainer for the MeshInstances### ### ### ### ### ### ### ### ### ###
+#     class Box configuration as dictionary
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
 #
 class Box:
-	export var mtrl : SpatialMaterial			# the look (every box has an own instnce)
+	export var mtrl : SpatialMaterial		                         # 3D Array as DataContainer for the MeshInstances	# the look (every box has an own instnce)
 	export var texture : ImageTexture
 	export var colr : Color
 
@@ -69,7 +70,7 @@ class Box:
 		else:
 			colr = color
 		mtrl.albedo_color = colr
-	
+
 		
 	# apply_texture : set a texture to the single box
 	#
@@ -91,8 +92,6 @@ class Box:
 		var rng = RandomNumberGenerator.new()
 		return Color(rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0))
 
-
-
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # class ConfigLoader : load JSON file with the brick configuration
@@ -100,24 +99,28 @@ class Box:
 #                      the path to the file must be given in the constructor
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
-# 
+    #  configuration as dictionary
 class ConfigLoader:
-	var cfgFile:String						# the path to the cfgFile file
-	var sizeX:int							# amount of boxes in this dimension
-	var sizeY:int							#   "         "             "
-	var sizeZ:int							#   "         "             "
+	var cfg									# the configuration as dictionary
+	var sizeX:int							# amount of boxes in configuration for this dimension
+	var sizeY:int							#   "         "             "          "
+	var sizeZ:int							#   "         "             "          "
+	var matrix = []                         # 3D Array as DataContainer for the MeshInstances
 
 	# load the configureration-file given as param
 	#		
-	# parameter configurationfile : path to the JSON cfgFile-file
+	# parameter configurationfile     : path configuration as dictionary
 	# 
-	func _init(configurationfile:String):
-		cfgFile = load_confg(configurationfile)
+	func _init(configurationfile:String, sX:int, sY:int, sZ:int ):
+		sizeX = sX
+		sizeY = sY
+		sizeZ = sZ
+		cfg = load_confg(configurationfile)
 
 	# loads json configuration file and returns it as dict
 	#
-	# parameter filePath : path to the JSON cfgFile.-file
-	# 
+	# parameter filePath     : path configuration as dictionary
+	#
 	func load_confg(filePath : String):
 		var file = File.new()
 		file.open(filePath, file.READ)
@@ -132,31 +135,31 @@ class ConfigLoader:
 	# get_num_of_bricks : get the amount of configured bricks in the conf-dict
 	#
 	func get_num_of_bricks():
-		if(cfgFile==null):
-			return 0
+		if(cfg==null):
+			return     0
 		else:
-			return cfgFile.size()
+			return cfg.size()
 
-
-	# create_array : create a shematic 2d-matrix which represents the  positions
-	#                of the boxes in the brick
+	# create_array : creates a 3D matrix for the boxes of e
 	#
-	func create_array(width : int,height : int):
-		var map = []
-		for i in range(width):
-			var col = []
-			col.resize(height)
-			map.append(col)
-		return map
+	func create_array():
+		matrix.resize[sizeX]
+		for x in matrix:
+			var yA = [].resize(sizeY)
+			for z in yA:
+				var zA = [].resize(sizeZ)
+				z = zA
+			x = yA
 
 
-	# create the boolean matrix for a brick as defined in the cfgFile-file
+
+	# create the boolean matrix for a     brick as configuration as dictionary
 	#
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
 	func create_matrix(idx : int):
-		var mtrx = create_array(sizeX,sizeX)
-		var data = cfgFile[String(idx)]
+		var mtrx = create_array()
+		var data = cfg[String(idx)]
 		for y in range(sizeY):
 			var line = data[String(y)]
 			for x in range(sizeX):
@@ -166,7 +169,6 @@ class ConfigLoader:
 				else:
 					mtrx[x][y] = false
 		return mtrx
-
 	
 
 	# print a given matrx for debugging 
