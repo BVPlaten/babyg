@@ -1,7 +1,7 @@
 # https://docs.godotengine.org/en/stable/getting_started/scripting/gdscript/gdscript_basics.html#classes
 
-const globalCnfgFile = "res://cfgFile/terominoes.json"
-# const globalCnfgFile = "res://cfgFile/AdvancedBricks.json"     # for 3D Tetris
+const globalCnfgFile = "res://config/terominoes.json"
+# const globalCnfgFile = "res://config/AdvancedBricks.json"     # for 3D Tetris
 
 
 
@@ -14,31 +14,26 @@ const globalCnfgFile = "res://cfgFile/terominoes.json"
 # 
 class_name Brick
 
-
-var lyrCfg
-var matrix        		# 2d array with boolean values to identify positions of boxes in the brick
-var index 				# the ID of this brick
-var positionArray = [] 	# array of boxes 
+var brickFactory
+const numberOfBricks = 7
 
 # constructor - if id is not given a random brick will be created
 #
-func _init(idx:int=-1):
-	lyrCfg = ConfigLoader.new(globalCnfgFile,4,4,1)
-	if idx < 0:
-		var rng = RandomNumberGenerator.new()
-		rng.randomize()
-		index = rng.randi()%lyrCfg.get_num_of_bricks()
-	else:
-		index = idx
-	#create_brick(index) !!!!
-	
+func _init(cfgFile:String=""):
+	brickFactory = BrickFactory.new(cfgFile,4,4,1)
+
 
 # create a brick by a given index 
 #
-func create_brick(idx):
-	matrix = lyrCfg.create_matrix(idx)	# read the     look of configuration as dictionary
-	lyrCfg.print_matrix(matrix)
-	positionArray = lyrCfg.get_pos_list(matrix)
+func create_brick(idx:int=-1):
+	var index:int
+	if idx < 0:
+		var rng = RandomNumberGenerator.new()
+		rng.randomize()
+		index = rng.randi()%numberOfBricks
+	else:
+		index = idx
+		brickFactory.create_brick(index)
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -99,23 +94,17 @@ class Box:
 #                      the path to the file must be given in the constructor
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05.22   bvp   initial realease
-    #  configuration as dictionary
 class ConfigLoader:
 	var cfg									# the configuration as dictionary
-	var sizeX:int							# amount of boxes in configuration for this dimension
-	var sizeY:int							#   "         "             "          "
-	var sizeZ:int							#   "         "             "          "
-	var matrix = []                         # 3D Array as DataContainer for the MeshInstances
+
 
 	# load the configureration-file given as param
 	#		
 	# parameter configurationfile     : path configuration as dictionary
 	# 
-	func _init(configurationfile:String, sX:int, sY:int, sZ:int ):
-		sizeX = sX
-		sizeY = sY
-		sizeZ = sZ
-		cfg = load_confg(configurationfile)
+	func _init(configurationfile:String):
+		load_confg(configurationfile)
+
 
 	# loads json configuration file and returns it as dict
 	#
@@ -128,17 +117,44 @@ class ConfigLoader:
 		file.close()
 		var conf = JSON.parse(text)
 		if conf.error != OK:
-			return
-		return conf.result
+			push_error("error loading config-file in ConfigLoader.load_confg()")
+		cfg =  conf.result
 
 
-	# get_num_of_bricks : get the amount of configured bricks in the conf-dict
+	# get_config_amount : get the amount of configured bricks in the conf-dict
 	#
-	func get_num_of_bricks():
+	func get_config_amount():
 		if(cfg==null):
 			return     0
 		else:
 			return cfg.size()
+
+
+
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+# class BrickFactory : 
+#                      
+#                      
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2021-05-22   bvp   initial realease
+class BrickFactory:
+	var sizeX:int							# amount of boxes in configuration for this dimension
+	var sizeY:int							#   "         "             "          "
+	var sizeZ:int							#   "         "             "          "
+	var config 								# configuration
+	var matrix = []                         # 3D Array as DataContainer for the MeshInstances
+
+	# load the configureration-file given as param
+	#		
+	# parameter configurationfile     : path configuration as dictionary
+	# 
+	func _init(configurationfile:String, sX:int, sY:int, sZ:int ):
+		sizeX = sX
+		sizeY = sY
+		sizeZ = sZ
+		config = ConfigLoader.new(configurationfile)
+
 
 	# create_array : creates a 3D matrix for the boxes of e
 	#
@@ -154,14 +170,13 @@ class ConfigLoader:
 			x = yA
 
 
-
 	# create the boolean matrix for a     brick as configuration as dictionary
 	#
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
 	func create_matrix(idx : int):
 		var mtrx = create_array()
-		var data = cfg[String(idx)]
+		var data = config[String(idx)]
 		for y in range(sizeY):
 			var line = data[String(y)]
 			for x in range(sizeX):
@@ -205,9 +220,4 @@ class ConfigLoader:
 	#
 	func _to_string():
 		return "Size of the layer is " + str(sizeX) + " * " + str(sizeY)
-
-
-
-
-
 
