@@ -89,6 +89,8 @@ class Box:
 		var rng = RandomNumberGenerator.new()
 		return Color(rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0),rng.randf_range(0.0, 1.0))
 
+
+
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # class ConfigLoader : load JSON file with the brick configuration
@@ -145,7 +147,7 @@ class BrickFactory:
 	var sizeY:int							#   "         "             "          "
 	var sizeZ:int							#   "         "             "          "
 	var config 								# configuration
-	var matrix = []                         # 3D Array as DataContainer for the MeshInstances
+	var matrix = [[[]]]                         # 3D Array as DataContainer for the MeshInstances
 
 	# load the configureration-file given as param
 	#		
@@ -156,23 +158,34 @@ class BrickFactory:
 		sizeY = sY
 		sizeZ = sZ
 		config = ConfigLoader.new(configurationfile).cfg
+
+
+	# create_matrix : this is the main-function. it generates a matrix with boxes
+	#
+	# parameter :  idx = which brick should be created (idx in JSON cfg)
+	#
+	func create_brick(idx : int):
 		create_array()
-		print(str(matrix))
+		for z in sizeZ:
+			for y in sizeY:
+				for x in sizeX:
+					if (get_point(idx,x,y,z)):
+						matrix[x][y][z] = '#'  # add_box_here
+					else:
+						matrix[x][y][z] = ' '
 
 
-	# create_array : memory allocation for the empty 3D matrix
+	# create_array : "memory-allocation" for the empty 3D matrix
 	#
 	func create_array():
-		matrix.resize(sizeX)
-		for x in matrix:
-			var yA = []
-			yA.resize(sizeY)
-			for z in yA:
-				var zA = []
-				zA.resize(sizeZ)
-				z = zA
-			x = yA
+		for z in sizeZ:
+			matrix.resize(sizeZ)
+			for y in sizeY:
+				matrix[y].resize(sizeY)
+				for x in sizeX:
+					matrix[z][y].resize(sizeX)
 
+				
 	# get_point : returns true if the given point for the given brick-idx is set
 	#             the first line in the configuration is the last line in the coord-system
 	#             so there must be a coord-convesion to avoid becoming crazy
@@ -184,74 +197,44 @@ class BrickFactory:
 	#
 	func get_point(idx:int, x:int, y:int, z:int):
 		var data = config[String(idx)]
-		var point = data[str(x)][z][y]
-		if point == '#':
+		if (data[str(x)][z][y] == '#'):
 			return true
 		else:
 			return false
-
-
-
-	# create the boolean matrix for a     brick as configuration as dictionary
-	#
-	# parameter :  idx = which brick should be created (idx in JSON cfg)
-	#
-	func create_matrix(idx : int):
-		pass
-		# var mtrx = create_array()
-		# # in data is the data for the brick corresponding to the given index
-		# var data = config[String(idx)]
-		# for y in range(sizeY):
-		# 	var line = data[String(y)]
-		# 	for x in range(sizeX):
-		# 		var puuuup = data[String(y)]
-		# 		for z in range(sizeZ):
-		# 			var point = line[x]
-		# 			if (point == '#'):
-		# 				mtrx[x][y][z] = true
-		# 			else:
-		# 				mtrx[x][y][z] = false
-		# return mtrx
-	
-
 
 
 	# print a given matrx for debugging 
 	#
 	# parameter : mtrx is the matrix that should be printed
 	#
-	func text_of_matrix(mtrx):
+	func text_of_matrix(mtrx=matrix):
 		var txt = ""
-		for y in range(sizeY):
-			txt += "layer " + str(y) + " \n"
-			for x in range(sizeX):
-				for z in range(sizeZ):
-					if (mtrx[x][y][z] == true):
-						txt += "X"
-					else:
-						txt += "."
-				txt += "\n"
+		for x in sizeX:
+			for y in sizeY:
+				for z in sizeZ:
+					txt += mtrx[x][y][z]
+				txt += '\n'
+			txt += '\n'
+		txt += '\n'
 		return txt
-				
-
-					
-			
-	
-
-	# get an Vector3-array with the coordinates of the given brick 
-	#
-	func get_pos_list(mtrx):
-		var coordArry = []
-		for y in range(sizeY):
-			for x in range(sizeX):
-				if (mtrx[x][y] == true):
-					var boxCrd = Vector3(x,y,0)
-					coordArry.append(boxCrd)
-		return coordArry
 
 
 	# string representation 
 	#
 	func _to_string():
-		return "Size of the layer is " + str(sizeX) + " * " + str(sizeY)
+		var outP = "Size of the layer is " + str(sizeX) + " * " + str(sizeY) + " * " + str(sizeZ) + "\n"
+		outP += text_of_matrix()
+		outP += '\n'
+		return outP
 
+
+	# # get an Vector3-array with the coordinates of the given brick 
+	# #
+	# func get_pos_list(mtrx):
+	# 	var coordArry = []
+	# 	for y in range(sizeY):
+	# 		for x in range(sizeX):
+	# 			if (mtrx[x][y] == true):
+	# 				var boxCrd = Vector3(x,y,0)
+	# 				coordArry.append(boxCrd)
+	# 	return coordArry
