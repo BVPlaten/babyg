@@ -36,6 +36,7 @@ func create_brick(idx:int=-1):
 	else:
 		index = idx
 	brickFactory.create_brick(index)
+	print(brickFactory)
 
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -147,7 +148,7 @@ class BrickFactory:
 	var sizeY:int							#   "         "             "          "
 	var sizeZ:int							#   "         "             "          "
 	var config 								# configuration
-	var matrix = [[[]]]                         # 3D Array as DataContainer for the MeshInstances
+	var matrix 								# 3D Array as DataContainer for the MeshInstances
 
 	# load the configureration-file given as param
 	#		
@@ -165,26 +166,29 @@ class BrickFactory:
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
 	func create_brick(idx : int):
-		create_array()
-		for z in sizeZ:
+		matrix = create_array()
+		for x in sizeX:
 			for y in sizeY:
-				for x in sizeX:
+				for z in sizeZ:				
 					if (get_point(idx,x,y,z)):
 						matrix[x][y][z] = '#'  # add_box_here
-					else:
-						matrix[x][y][z] = ' '
 
 
 	# create_array : "memory-allocation" for the empty 3D matrix
 	#
-	func create_array():
-		for z in sizeZ:
-			matrix.resize(sizeZ)
-			for y in sizeY:
-				matrix[y].resize(sizeY)
-				for x in sizeX:
-					matrix[z][y].resize(sizeX)
-
+	func create_array(xS:int=sizeX, yS:int=sizeY, zS:int=sizeZ):
+		var array = []
+		array.resize(xS)    # X-dimension
+		for x in xS:    # this method should be faster than range since it uses a real iterator iirc
+			array[x] = []
+			array[x].resize(yS)    # Y-dimension
+			for y in yS:
+				array[x][y] = []
+				array[x][y].resize(zS)    # Z-dimension
+				for z in zS:
+					array[x][y][z] = null
+		return array
+		
 				
 	# get_point : returns true if the given point for the given brick-idx is set
 	#             the first line in the configuration is the last line in the coord-system
@@ -212,8 +216,7 @@ class BrickFactory:
 		for x in sizeX:
 			for y in sizeY:
 				for z in sizeZ:
-					txt += mtrx[x][y][z]
-				txt += '\n'
+					txt += str(mtrx[x][y][z])
 			txt += '\n'
 		txt += '\n'
 		return txt
@@ -227,14 +230,3 @@ class BrickFactory:
 		outP += '\n'
 		return outP
 
-
-	# # get an Vector3-array with the coordinates of the given brick 
-	# #
-	# func get_pos_list(mtrx):
-	# 	var coordArry = []
-	# 	for y in range(sizeY):
-	# 		for x in range(sizeX):
-	# 			if (mtrx[x][y] == true):
-	# 				var boxCrd = Vector3(x,y,0)
-	# 				coordArry.append(boxCrd)
-	# 	return coordArry
