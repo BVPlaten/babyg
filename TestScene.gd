@@ -1,15 +1,17 @@
 extends Spatial
 
-var xW = 5
-var yW = 5
-var zW = 5
-
 
 # Called when the node enters the scene tree for the first time.
 # https://www.reddit.com/r/godot/comments/ao2bkh/need_help_creating_a_3d_array/
 #
 func _ready():
-	var brick = Brick.new()
+	# var brick = Brick.new()
+	# brick.create_brick()
+
+	var size = {'X': 4, 'Y': 4, 'Z': 4}
+	var cnfgFile = "res://config/three_dim_test.json"
+
+	var brick = Brick.new(cnfgFile,size)
 	brick.create_brick()
 
 

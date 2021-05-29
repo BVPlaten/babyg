@@ -21,12 +21,17 @@ const globalCnfgFile = "res://config/terominoes.json"
 
 # constructor - if id is not given a random brick will be created
 #
-func _init(cfgFile:String=globalCnfgFile):
-	brickFactory = BrickFactory.new(cfgFile,sizeOfSpace['X'],sizeOfSpace['Y'],sizeOfSpace['Z'])
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2021-05-21   bvp   initial realease
+func _init(cfgFile:String=globalCnfgFile, sizeDict:Dictionary=sizeOfSpace):
+	#prepare the brick creation with the cfg-file and the available dimension-sizes
+	brickFactory = BrickFactory.new(cfgFile,sizeDict['X'],sizeDict['Y'],sizeDict['Z'])
 
 
 # create a brick by a given index 
 #
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2021-05-21   bvp   initial realease
 func create_brick(idx:int=-1):
 	var index:int
 	if idx < 0:
@@ -102,7 +107,6 @@ class Box:
 class ConfigLoader:
 	var cfg									# the configuration as dictionary
 
-
 	# load the configureration-file given as param
 	#		
 	# parameter configurationfile     : path configuration as dictionary
@@ -138,7 +142,7 @@ class ConfigLoader:
 
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-# class BrickFactory : 
+# class BrickFactory : creates a matrix of box-mesh-instances from the form given in the configuration-file
 #                      
 #                      
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -147,17 +151,24 @@ class BrickFactory:
 	var sizeX:int							# amount of boxes in configuration for this dimension
 	var sizeY:int							#   "         "             "          "
 	var sizeZ:int							#   "         "             "          "
-	var config 								# configuration
-	var matrix 								# 3D Array as DataContainer for the MeshInstances
+	var config 								# configuration-dict
+	var matrix 								# 3D Array as DataContainer for the MeshInstances (boxes :-) )
+	var brickIdx                            # brick of the index in the configuration
 
 	# load the configureration-file given as param
 	#		
-	# parameter configurationfile     : path configuration as dictionary
-	# 
+	# parameter configurationfile  : path configuration as dictionary
+	#            sX                : possible horizontal size of a brick
+	#            sY                : possible vertical size of a brick
+	#            sZ                : possible depth of a brick
+	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
 	func _init(configurationfile:String, sX:int, sY:int, sZ:int ):
 		sizeX = sX
 		sizeY = sY
 		sizeZ = sZ
+		brickIdx = null
 		config = ConfigLoader.new(configurationfile).cfg
 
 
@@ -165,26 +176,33 @@ class BrickFactory:
 	#
 	# parameter :  idx = which brick should be created (idx in JSON cfg)
 	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
 	func create_brick(idx : int):
 		matrix = create_array()
+		brickIdx = idx
 		for x in sizeX:
 			for y in sizeY:
 				for z in sizeZ:				
 					if (get_point(idx,x,y,z)):
 						matrix[x][y][z] = '#'  # add_box_here
+					else:
+						matrix[x][y][z] = ' '  # add null here
 
 
 	# create_array : "memory-allocation" for the empty 3D matrix
 	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
 	func create_array(xS:int=sizeX, yS:int=sizeY, zS:int=sizeZ):
 		var array = []
-		array.resize(xS)    # X-dimension
-		for x in xS:    # this method should be faster than range since it uses a real iterator iirc
+		array.resize(xS)    					# X-dimension
+		for x in xS:    						# this method should be faster than range since it uses a real iterator iirc
 			array[x] = []
-			array[x].resize(yS)    # Y-dimension
+			array[x].resize(yS)    				# Y-dimension
 			for y in yS:
 				array[x][y] = []
-				array[x][y].resize(zS)    # Z-dimension
+				array[x][y].resize(zS)    		# Z-dimension
 				for z in zS:
 					array[x][y][z] = null
 		return array
@@ -199,6 +217,8 @@ class BrickFactory:
 	#             y   : the y-coordinate
 	#             z   : the z-coordinate
 	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
 	func get_point(idx:int, x:int, y:int, z:int):
 		var data = config[String(idx)]
 		if (data[str(x)][z][y] == '#'):
@@ -211,6 +231,8 @@ class BrickFactory:
 	#
 	# parameter : mtrx is the matrix that should be printed
 	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
 	func text_of_matrix(mtrx=matrix):
 		var txt = ""
 		for x in sizeX:
@@ -226,6 +248,7 @@ class BrickFactory:
 	#
 	func _to_string():
 		var outP = "Size of the layer is " + str(sizeX) + " * " + str(sizeY) + " * " + str(sizeZ) + "\n"
+		outP += "configuration index of the brick : " + str(brickIdx) + " \n"
 		outP += text_of_matrix()
 		outP += '\n'
 		return outP
