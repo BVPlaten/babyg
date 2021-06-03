@@ -15,17 +15,26 @@
 class_name Brick
 
 var brickFactory
-const numberOfBricks = 7
-const sizeOfSpace = {'X': 4, 'Y': 4, 'Z': 1}
-const globalCnfgFile = "res://config/terominoes.json"
+var amountOfBricks
+var sizeOfSpace
+var globalCnfgFile 
 
 # constructor - if id is not given a random brick will be created
 #
+# cfgFile:       path to the json configuration file
+# amount:        number of bricks, 
+# sizeDict:      defining the size of the matrix available for a brick
+#                'X' : width
+#                'Y' : heigth
+#                'Z' : depth
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 2021-05-21   bvp   initial realease
-func _init(cfgFile:String=globalCnfgFile, sizeDict:Dictionary=sizeOfSpace):
-	#prepare the brick creation with the cfg-file and the available dimension-sizes
-	brickFactory = BrickFactory.new(cfgFile,sizeDict['X'],sizeDict['Y'],sizeDict['Z'])
+func _init(cfgFl:String="res://config/terominoes.json", amount:int=7, sizeDict:Dictionary={'X': 4, 'Y': 4, 'Z': 1}):
+	globalCnfgFile = cfgFl
+	amountOfBricks = amount
+	sizeOfSpace = sizeDict
+	brickFactory = BrickFactory.new(globalCnfgFile,sizeOfSpace)
 
 
 # create a brick by a given index 
@@ -37,7 +46,7 @@ func create_brick(idx:int=-1):
 	if idx < 0:
 		var rng = RandomNumberGenerator.new()
 		rng.randomize()
-		index = rng.randi()%numberOfBricks
+		index = rng.randi()%amountOfBricks
 	else:
 		index = idx
 	brickFactory.create_brick(index)
@@ -103,23 +112,28 @@ class Box:
 #                      the object in the json-file is converted to and stored in a dictionary. the bricks must have numeric keys
 #                      the path to the file must be given in the constructor
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 2021-05.22   bvp   initial realease
+# 2021-05-22   bvp   initial realease
+# 2021-06-01   bvp   added access to the layers of the configuration
 class ConfigLoader:
-	var cfg									# the configuration as dictionary
+	var cfgFile				# the complete path/filename to the configuration
+	var loadInfo 			# theconfig-dict with infos how to load the config-file
+	var cfg					# the cfg loaded from file as dictionary
 
 	# load the configureration-file given as param
 	#		
 	# parameter configurationfile     : path configuration as dictionary
 	# 
-	func _init(configurationfile:String):
-		load_confg(configurationfile)
+	func _init(configurationfile:String,ldInf:Dictionary):
+		cfgFile = configurationfile
+		loadInfo = ldInf
+		load_confg()
 
 
 	# loads json configuration file and returns it as dict
 	#
 	# parameter filePath     : path configuration as dictionary
 	#
-	func load_confg(filePath : String):
+	func load_confg(filePath:String=cfgFile):
 		var file = File.new()
 		file.open(filePath, file.READ)
 		var text = file.get_as_text()
@@ -137,6 +151,30 @@ class ConfigLoader:
 			return     0
 		else:
 			return cfg.size()
+			
+	
+	# all_bricks : creates a string with all bricks from configuration
+	#
+	func all_bricks():
+		var rslt = ""
+		for i in range(get_config_amount()):
+			rslt += "\n\nbrick " + str(i) + "\n\n"
+			rslt += str(cfg[str(i)])
+			rslt += "\n\n- - - - - - - - - - \n\n"
+		return rslt
+			
+
+
+	
+	# # get_layer(brickId:int, lyrId:int):
+	# #
+	# func get_layer(brickId:String, lyrId:int):
+	# 	var brck = cfg[brickId]
+	# 	for i in range(4):
+	# 		print(brck[lyrId])
+		
+		
+	
 
 
 
@@ -153,41 +191,23 @@ class BrickFactory:
 	var sizeZ:int							#   "         "             "          "
 	var config 								# configuration-dict
 	var matrix 								# 3D Array as DataContainer for the MeshInstances (boxes :-) )
-	var brickIdx                            # brick of the index in the configuration
+	var brickIdx                            # index of current brick in the configuration
 
 	# load the configureration-file given as param
 	#		
 	# parameter configurationfile  : path configuration as dictionary
-	#            sX                : possible horizontal size of a brick
-	#            sY                : possible vertical size of a brick
-	#            sZ                : possible depth of a brick
+	#            sizeDict['X']     : possible horizontal size of a brick
+	#            sizeDict['Y']     : possible vertical size of a brick
+	#            sizeDict['Z']     : possible depth of a brick
 	#
 	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# 2021-05-29   bvp   initial realease
-	func _init(configurationfile:String, sX:int, sY:int, sZ:int ):
-		sizeX = sX
-		sizeY = sY
-		sizeZ = sZ
+	func _init(configurationfile:String, sizeDict:Dictionary ):
+		sizeX = sizeDict['X']
+		sizeY = sizeDict['Y']
+		sizeZ = sizeDict['Z']
 		brickIdx = null
-		config = ConfigLoader.new(configurationfile).cfg
-
-
-	# create_matrix : this is the main-function. it generates a matrix with boxes
-	#
-	# parameter :  idx = which brick should be created (idx in JSON cfg)
-	#
-	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	# 2021-05-29   bvp   initial realease
-	func create_brick(idx : int):
-		matrix = create_array()
-		brickIdx = idx
-		for x in sizeX:
-			for y in sizeY:
-				for z in sizeZ:				
-					if (get_point(idx,x,y,z)):
-						matrix[x][y][z] = '#'  # add_box_here
-					else:
-						matrix[x][y][z] = ' '  # add null here
+		config = ConfigLoader.new(configurationfile,sizeDict).cfg
 
 
 	# create_array : "memory-allocation" for the empty 3D matrix
@@ -208,6 +228,24 @@ class BrickFactory:
 		return array
 		
 				
+	# create_matrix : this is the main-function. it generates a matrix with boxes
+	#
+	# parameter :  idx = which brick should be created (idx in JSON cfg)
+	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
+	func create_brick(idx : int):
+		matrix = create_array()
+		brickIdx = idx
+		for x in sizeX:				
+			for y in sizeY:
+				for z in sizeZ:
+					if (get_point(idx,x,y,z)):
+						matrix[x][y][z] = '#'  # add_box_here
+					else:
+						matrix[x][y][z] = '.'  # add null here
+
+
 	# get_point : returns true if the given point for the given brick-idx is set
 	#             the first line in the configuration is the last line in the coord-system
 	#             so there must be a coord-convesion to avoid becoming crazy
@@ -221,7 +259,7 @@ class BrickFactory:
 	# 2021-05-29   bvp   initial realease
 	func get_point(idx:int, x:int, y:int, z:int):
 		var data = config[String(idx)]
-		if (data[str(x)][z][y] == '#'):
+		if (data[str(x)][y][z] == '#'):
 			return true
 		else:
 			return false
@@ -237,10 +275,11 @@ class BrickFactory:
 		var txt = ""
 		for x in sizeX:
 			for y in sizeY:
+				txt += "x=" + str(x) + " y=" + str(y) + ' |'
 				for z in sizeZ:
 					txt += str(mtrx[x][y][z])
+				txt += '\n'
 			txt += '\n'
-		txt += '\n'
 		return txt
 
 
