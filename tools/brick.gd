@@ -153,6 +153,46 @@ class ConfigLoader:
 			return cfg.size()
 			
 	
+	# create_array : "memory-allocation" for the empty 3D matrix
+	#
+	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	# 2021-05-29   bvp   initial realease
+	func create_array(xS:int, yS:int, zS:int):
+		var array = []
+		array.resize(xS)    					# X-dimension
+		for x in xS:    						# this method should be faster than range since it uses a real iterator iirc
+			array[x] = []
+			array[x].resize(yS)    				# Y-dimension
+			for y in yS:
+				array[x][y] = []
+				array[x][y].resize(zS)    		# Z-dimension
+				for z in zS:
+					array[x][y][z] = null
+		return array
+
+	# bricks_to_array : convert a brick to a boolean matrix
+	# parameter : int index 
+	# loadInfo must contain configuration data
+	# {'X': 4, 'Y': 4, 'Z': 4} (done in constructor)
+	#
+	func brick_to_array(index:int):
+		var brickArry = create_array(loadInfo['X'],loadInfo['Y'],loadInfo['Z'])
+		var source = cfg[str(index)]
+		var amountRows = loadInfo['X']
+		var amountLines = loadInfo['Y']
+		var amountLevels = loadInfo['Z']
+		var chckStr = "brick_to_array( " + str(index) + " ) \n"
+		for y in amountLines:
+			for z in amountLevels:
+				for x in amountRows:
+					var point = source[str(z)][y][x]
+					chckStr += point
+				chckStr += "\n"
+			chckStr += "\n\n"
+		return chckStr # brickArry
+
+		
+	
 	# all_bricks : creates a string with all bricks from configuration
 	#
 	func all_bricks():
@@ -164,11 +204,11 @@ class ConfigLoader:
 		return rslt
 			
 
-	# bricks_as_str : get the given brick by index as string
+	# brick_to_str : get the given brick by index as string
 	# parameter : int index 
 	#
-	func bricks_as_str(index:int):
-		var rslt = ""
+	func brick_to_str(index:int):
+		var rslt = "brick index " +str(index) + " \n\n"
 		var source = cfg[str(index)]
 		var amountLines = loadInfo['Y']
 		var amountLevels = loadInfo['Z']
@@ -180,17 +220,6 @@ class ConfigLoader:
 		return rslt
 
 
-
-	
-	# # get_layer(brickId:int, lyrId:int):
-	# #
-	# func get_layer(brickId:String, lyrId:int):
-	# 	var brck = cfg[brickId]
-	# 	for i in range(4):
-	# 		print(brck[lyrId])
-		
-		
-	
 
 
 
