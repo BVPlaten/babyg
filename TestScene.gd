@@ -13,6 +13,8 @@ func _ready():
 	print(config.get_config_amount())
 	print()
 	print(config.all_bricks())
+	print()
+	print(config.bricks_as_str(2))
 
 
 	

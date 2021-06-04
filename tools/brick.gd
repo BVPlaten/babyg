@@ -158,11 +158,27 @@ class ConfigLoader:
 	func all_bricks():
 		var rslt = ""
 		for i in range(get_config_amount()):
-			rslt += "\n\nbrick " + str(i) + "\n\n"
+			rslt += "brick " + str(i) + "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  \n"
 			rslt += str(cfg[str(i)])
-			rslt += "\n\n- - - - - - - - - - \n\n"
+			rslt += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  \n"
 		return rslt
 			
+
+	# bricks_as_str : get the given brick by index as string
+	# parameter : int index 
+	#
+	func bricks_as_str(index:int):
+		var rslt = ""
+		var source = cfg[str(index)]
+		var amountLines = loadInfo['Y']
+		var amountLevels = loadInfo['Z']
+		for y in amountLines:
+			for z in amountLevels:
+				# rslt += source[str(y)][z] +"\n"
+				rslt += source[str(z)][y] +"\n"
+			rslt += "\n"
+		return rslt
+
 
 
 	
