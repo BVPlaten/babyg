@@ -194,7 +194,7 @@ class ConfigLoader:
 					var isSet = false
 					if point =="#":
 						isSet = true
-					brickArry[z][x][y] = isSet
+					brickArry[x][z][y] = isSet
 					developmentAid += point
 				developmentAid += "\n"
 			developmentAid += "\n"
