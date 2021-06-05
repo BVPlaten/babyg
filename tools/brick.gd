@@ -116,16 +116,20 @@ class Box:
 # 2021-06-01   bvp   added access to the layers of the configuration
 class ConfigLoader:
 	var cfgFile				# the complete path/filename to the configuration
-	var loadInfo 			# theconfig-dict with infos how to load the config-file
+	var mtrxDmns 			# theconfig-dict with infos how to load the config-file
 	var cfg					# the cfg loaded from file as dictionary
 
 	# load the configureration-file given as param
 	#		
-	# parameter configurationfile     : path configuration as dictionary
-	# 
+	# parameter:
+	#
+	# configurationfile   : path configuration as dictionary
+	# ldInf               : Dictionary with the dimensions of the 3D-matrix
+	#
+	# 2021-05-29   bvp   initial realease
 	func _init(configurationfile:String,ldInf:Dictionary):
 		cfgFile = configurationfile
-		loadInfo = ldInf
+		mtrxDmns = ldInf
 		load_confg()
 
 
@@ -133,6 +137,7 @@ class ConfigLoader:
 	#
 	# parameter filePath     : path configuration as dictionary
 	#
+	# 2021-05-29   bvp   initial realease
 	func load_confg(filePath:String=cfgFile):
 		var file = File.new()
 		file.open(filePath, file.READ)
@@ -155,7 +160,6 @@ class ConfigLoader:
 	
 	# create_array : "memory-allocation" for the empty 3D matrix
 	#
-	# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	# 2021-05-29   bvp   initial realease
 	func create_array(xS:int, yS:int, zS:int):
 		var array = []
@@ -171,25 +175,31 @@ class ConfigLoader:
 		return array
 
 	# bricks_to_array : convert a brick to a boolean matrix
+	#
 	# parameter : int index 
-	# loadInfo must contain configuration data
+	# mtrxDmns must contain configuration data
 	# {'X': 4, 'Y': 4, 'Z': 4} (done in constructor)
 	#
 	func brick_to_array(index:int):
-		var brickArry = create_array(loadInfo['X'],loadInfo['Y'],loadInfo['Z'])
 		var source = cfg[str(index)]
-		var amountRows = loadInfo['X']
-		var amountLines = loadInfo['Y']
-		var amountLevels = loadInfo['Z']
-		var chckStr = "brick_to_array( " + str(index) + " ) \n"
-		for y in amountLines:
-			for z in amountLevels:
-				for x in amountRows:
+		var numRows = mtrxDmns['X']
+		var numLines = mtrxDmns['Y']
+		var numLevels = mtrxDmns['Z']
+		var brickArry = create_array(numRows,numLines,numLevels)
+		var developmentAid = "Stein : " + str(index) + " - - - - - - - - - - - - - - - \n\n"
+		for y in numLines:
+			for z in numLevels:
+				for x in numRows:
 					var point = source[str(z)][y][x]
-					chckStr += point
-				chckStr += "\n"
-			chckStr += "\n\n"
-		return chckStr # brickArry
+					var isSet = false
+					if point =="#":
+						isSet = true
+					brickArry[z][x][y] = isSet
+					developmentAid += point
+				developmentAid += "\n"
+			developmentAid += "\n"
+		print(developmentAid)
+		return brickArry
 
 		
 	
@@ -204,18 +214,23 @@ class ConfigLoader:
 		return rslt
 			
 
-	# brick_to_str : get the given brick by index as string
+	# brick_to_str : gets the 3d matrix for a given brick
 	# parameter : int index 
 	#
 	func brick_to_str(index:int):
 		var rslt = "brick index " +str(index) + " \n\n"
-		var source = cfg[str(index)]
-		var amountLines = loadInfo['Y']
-		var amountLevels = loadInfo['Z']
-		for y in amountLines:
-			for z in amountLevels:
-				# rslt += source[str(y)][z] +"\n"
-				rslt += source[str(z)][y] +"\n"
+		var mtrx = brick_to_array(index)
+		var numRows = mtrxDmns['X']
+		var numLines = mtrxDmns['Y']
+		var numLevels = mtrxDmns['Z']
+		for z in numLevels:
+			for y in numLines:
+				for x in numRows:
+					if(mtrx[x][y][z]):
+						rslt += "#"
+					else:
+						rslt += "."
+				rslt += "\n"
 			rslt += "\n"
 		return rslt
 

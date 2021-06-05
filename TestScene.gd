@@ -14,7 +14,8 @@ func _ready():
 	print()
 	print(config.all_bricks())
 	print()
-	print(config.brick_to_array(2))
+	print(config.brick_to_str(2))
+	get_tree().quit()
 
 
 	
